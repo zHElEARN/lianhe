@@ -4,7 +4,7 @@ import { ChatHeader, MessageInput, MessageList } from "@/components/chat";
 import { Button } from "@/components/ui/button";
 import { useChat } from "@/contexts/chat-context";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { use, useEffect } from "react";
+import { use, useEffect, useRef } from "react";
 import ChatSkeleton from "./skeleton";
 
 export default function ChatPage({
@@ -16,9 +16,12 @@ export default function ChatPage({
   const { currentChatRecord, loading, error, fetchChatRecord, sendMessage } =
     useChat();
 
+  const lastFetchedId = useRef<string | null>(null);
+
   useEffect(() => {
-    if (id) {
+    if (id && id !== lastFetchedId.current) {
       fetchChatRecord(id);
+      lastFetchedId.current = id;
     }
   }, [id, fetchChatRecord]);
 
@@ -47,7 +50,9 @@ export default function ChatPage({
           <div className="flex justify-center mb-4">
             <AlertCircle className="w-12 h-12 text-destructive" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground mb-2">加载失败</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            加载失败
+          </h2>
           <p className="text-muted-foreground mb-4">{error.currentChat}</p>
           <Button onClick={handleRetry} variant="outline" className="gap-2">
             <RefreshCw className="w-4 h-4" />
@@ -78,10 +83,7 @@ export default function ChatPage({
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <ChatHeader 
-        chatName={currentChatRecord.chatName} 
-        onBack={handleBack}
-      />
+      <ChatHeader chatName={currentChatRecord.chatName} onBack={handleBack} />
       <MessageList messages={currentChatRecord.messages} />
       <MessageInput onSendMessage={handleSendMessage} />
     </div>

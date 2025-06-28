@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useChat } from "@/contexts/chat-context";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ChatListSkeleton } from "./skeleton";
 
 const ChatErrorComponent = ({
@@ -40,6 +40,7 @@ export default function ChatLayout({
   const { chats, currentChatId, loading, error, fetchChats, setCurrentChatId } =
     useChat();
 
+  const hasFetchedChats = useRef(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -47,14 +48,19 @@ export default function ChatLayout({
     ? pathname.split("/")[2]
     : null;
 
+  // 只在路径中的 chatId 与当前 chatId 不同时才更新
   useEffect(() => {
     if (pathChatId !== currentChatId) {
       setCurrentChatId(pathChatId);
     }
   }, [pathChatId, currentChatId, setCurrentChatId]);
 
+  // 只在组件首次挂载时获取聊天列表
   useEffect(() => {
-    fetchChats();
+    if (!hasFetchedChats.current) {
+      fetchChats();
+      hasFetchedChats.current = true;
+    }
   }, [fetchChats]);
 
   const handleChatClick = (chatId: string) => {
