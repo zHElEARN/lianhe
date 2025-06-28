@@ -1,11 +1,36 @@
 "use client";
 
 import { ChatList, Sidebar } from "@/components/chat";
+import { Button } from "@/components/ui/button";
 import { useChat } from "@/contexts/chat-context";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ChatError } from "./error";
 import { ChatListSkeleton } from "./skeleton";
+
+const ChatErrorComponent = ({
+  onRetry,
+  message = "获取聊天列表失败",
+}: {
+  onRetry?: () => void;
+  message?: string;
+}) => (
+  <div className="flex-1 flex flex-col items-center justify-center p-8">
+    <div className="text-center space-y-4">
+      <AlertTriangle className="w-12 h-12 text-destructive mx-auto" />
+      <div>
+        <h3 className="text-lg font-medium text-foreground">出错了</h3>
+        <p className="text-sm text-muted-foreground mt-1">{message}</p>
+      </div>
+      {onRetry && (
+        <Button onClick={onRetry} variant="outline" className="mt-4">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          重试
+        </Button>
+      )}
+    </div>
+  </div>
+);
 
 export default function ChatLayout({
   children,
@@ -57,7 +82,7 @@ export default function ChatLayout({
         onAddFriend={handleAddFriend}
         onSearch={handleSearch}
         LoadingComponent={ChatListSkeleton}
-        ErrorComponent={ChatError}
+        ErrorComponent={ChatErrorComponent}
       />
       <div className="flex-1 flex flex-col">{children}</div>
     </div>
