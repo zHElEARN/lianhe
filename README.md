@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Web聊天
 
-## Getting Started
+使用 Next.js 和 React 构建的聊天前端网页。
 
-First, run the development server:
+## 功能特色
+
+- 💬 实时聊天界面
+- 🎨 现代化的 UI 设计
+- 🌙 深色/浅色主题切换
+
+## 技术栈
+
+- **前端框架**: Next.js 15.3.4
+- **UI 组件**: React 19 + Radix UI
+- **样式**: Tailwind CSS 4
+- **图标**: Lucide React
+- **包管理**: pnpm
+
+## 安装依赖
+
+启用pnpm：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+corepack enable pnpm
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+然后安装项目依赖：
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 启动项目
 
-## Learn More
+### 开发环境启动
 
-To learn more about Next.js, take a look at the following resources:
+启动开发服务器：
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+### 生产环境启动
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+如果需要启动生产环境服务：
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm run start
+```
+
+
+## 编译项目
+
+### 构建生产版本
+
+构建优化后的生产版本：
+
+```bash
+pnpm run build
+```
