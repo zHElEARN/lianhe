@@ -112,7 +112,7 @@ export default function ChatLayout({
       <div className="w-16 bg-sidebar flex flex-col items-center py-4 border-r border-border">
         <div className="mb-6">
           <Avatar className="w-10 h-10">
-            <AvatarImage src="/api/placeholder/40/40" alt="用户头像" />
+            <AvatarImage src="#" alt="用户头像" />
             <AvatarFallback className="bg-muted text-muted-foreground">
               我
             </AvatarFallback>

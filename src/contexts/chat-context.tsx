@@ -163,7 +163,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const fetchChats = useCallback(async () => {
     dispatch({ type: "SET_CHATS_LOADING", payload: true });
     try {
-      const response = await fetch("http://localhost:8000/chats");
+      const response = await fetch("/api/chats");
       if (!response.ok) {
         throw new Error("获取聊天列表失败");
       }
@@ -198,7 +198,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const fetchChatRecord = useCallback(async (chatId: string) => {
     dispatch({ type: "SET_CURRENT_CHAT_LOADING", payload: true });
     try {
-      const response = await fetch(`http://localhost:8000/chats/${chatId}`);
+      const response = await fetch(`/api/chats/${chatId}`);
       if (!response.ok) {
         throw new Error("获取聊天记录失败");
       }
