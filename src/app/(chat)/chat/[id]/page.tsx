@@ -1,23 +1,10 @@
 "use client";
 
+import { useChat } from "@/contexts/chat-context";
 import { ArrowLeft, Send } from "lucide-react";
 import { use, useEffect, useState } from "react";
 import ChatError, { ChatNotFound } from "./error";
 import ChatSkeleton from "./skeleton";
-
-interface Message {
-  id: string;
-  sender: string;
-  content: string;
-  timestamp: string;
-  isSelf: boolean;
-}
-
-interface ChatRecord {
-  chatId: string;
-  chatName: string;
-  messages: Message[];
-}
 
 export default function ChatPage({
   params,
@@ -25,55 +12,24 @@ export default function ChatPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [chatRecord, setChatRecord] = useState<ChatRecord | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { currentChatRecord, loading, error, fetchChatRecord, sendMessage } =
+    useChat();
+
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    fetchChatRecord();
-  }, [id]);
-
-  const fetchChatRecord = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`http://localhost:8000/chats/${id}`);
-      if (!response.ok) {
-        throw new Error("获取聊天记录失败");
-      }
-      const data = await response.json();
-      setChatRecord(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "获取聊天记录失败");
-    } finally {
-      setLoading(false);
+    if (id) {
+      fetchChatRecord(id);
     }
-  };
+  }, [id, fetchChatRecord]);
 
-  const sendMessage = async () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || sending) return;
 
     setSending(true);
     try {
-      // 模拟发送消息
-      const message: Message = {
-        id: Date.now().toString(),
-        sender: "我",
-        content: newMessage,
-        timestamp: new Date().toISOString(),
-        isSelf: true,
-      };
-
-      setChatRecord((prev) =>
-        prev
-          ? {
-              ...prev,
-              messages: [...prev.messages, message],
-            }
-          : null
-      );
-
+      await sendMessage(newMessage);
       setNewMessage("");
     } catch (err) {
       console.error("发送消息失败:", err);
@@ -85,7 +41,7 @@ export default function ChatPage({
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSendMessage();
     }
   };
 
@@ -97,15 +53,21 @@ export default function ChatPage({
     });
   };
 
-  if (loading) {
+  const handleRetry = () => {
+    if (id) {
+      fetchChatRecord(id);
+    }
+  };
+
+  if (loading.currentChat) {
     return <ChatSkeleton />;
   }
 
-  if (error) {
-    return <ChatError error={error} onRetry={fetchChatRecord} />;
+  if (error.currentChat) {
+    return <ChatError error={error.currentChat} onRetry={handleRetry} />;
   }
 
-  if (!chatRecord) {
+  if (!currentChatRecord) {
     return <ChatNotFound />;
   }
 
@@ -120,13 +82,13 @@ export default function ChatPage({
         </button>
         <div className="flex items-center">
           <h1 className="ml-3 text-lg font-semibold text-foreground">
-            {chatRecord.chatName}
+            {currentChatRecord.chatName}
           </h1>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {chatRecord.messages.map((message) => (
+        {currentChatRecord.messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${
@@ -177,7 +139,7 @@ export default function ChatPage({
             />
           </div>
           <button
-            onClick={sendMessage}
+            onClick={handleSendMessage}
             disabled={!newMessage.trim() || sending}
             className={`p-2 rounded-lg transition-colors flex-shrink-0 h-10 w-10 ${
               newMessage.trim() && !sending

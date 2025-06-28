@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useChat } from "@/contexts/chat-context";
 import {
   Camera,
   MessageSquare,
@@ -22,99 +23,47 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ChatError } from "./error";
 import { ChatListSkeleton } from "./skeleton";
-
-interface ChatItem {
-  id: string;
-  name: string;
-  avatar: string;
-  lastMessage: string;
-  lastTime: string;
-  unreadCount: number;
-}
 
 export default function ChatLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [chats, setChats] = useState<ChatItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { chats, currentChatId, loading, error, fetchChats, setCurrentChatId } =
+    useChat();
+
   const { setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
 
-  const currentChatId = pathname.startsWith("/chat/")
+  const pathChatId = pathname.startsWith("/chat/")
     ? pathname.split("/")[2]
     : null;
 
-  const fetchChats = async (): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch("http://localhost:8000/chats");
-      const data: ChatItem[] = await response.json();
-
-      const formattedChats: ChatItem[] = data.map((chat: ChatItem) => ({
-        ...chat,
-        lastTime: formatTime(chat.lastTime),
-      }));
-
-      setChats(formattedChats);
-    } catch (error) {
-      console.error("获取聊天列表失败:", error);
-      setError("无法加载聊天列表，请检查网络连接");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (pathChatId !== currentChatId) {
+      setCurrentChatId(pathChatId);
     }
-  };
+  }, [pathChatId, currentChatId, setCurrentChatId]);
 
   useEffect(() => {
     fetchChats();
-  }, []);
-
-  const formatTime = (timeStr: string): string => {
-    const time = new Date(timeStr);
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const messageDate = new Date(
-      time.getFullYear(),
-      time.getMonth(),
-      time.getDate()
-    );
-
-    if (messageDate.getTime() === today.getTime()) {
-      return time.toLocaleTimeString("zh-CN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } else if (
-      messageDate.getTime() ===
-      today.getTime() - 24 * 60 * 60 * 1000
-    ) {
-      return "昨天";
-    } else {
-      return time.toLocaleDateString("zh-CN", {
-        month: "2-digit",
-        day: "2-digit",
-      });
-    }
-  };
+  }, [fetchChats]);
 
   const handleChatClick = (chatId: string) => {
     router.push(`/chat/${chatId}`);
   };
 
   const renderChatList = () => {
-    if (loading) {
+    if (loading.chats) {
       return <ChatListSkeleton />;
     }
 
-    if (error) {
-      return <ChatError onRetry={fetchChats} message={error} />;
+    if (error.chats) {
+      return <ChatError onRetry={fetchChats} message={error.chats} />;
     }
 
     return (

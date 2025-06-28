@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function ChatListSkeleton() {
   return (
     <div className="flex-1 overflow-y-auto">
-      {Array.from({ length: 8 }).map((_, index) => (
+      {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={index}
           className="flex items-center p-4 border-b border-border"

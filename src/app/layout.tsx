@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { ChatProvider } from "@/contexts/chat-context";
 import "./globals.css";
 
 export default function RootLayout({
@@ -12,7 +13,7 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <ChatProvider>{children}</ChatProvider>
         </ThemeProvider>
       </body>
     </html>
