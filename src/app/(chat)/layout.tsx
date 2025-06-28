@@ -23,6 +23,8 @@ import {
 import { useTheme } from "next-themes";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ChatError } from "./error";
+import { ChatListSkeleton } from "./skeleton";
 
 interface ChatItem {
   id: string;
@@ -40,6 +42,7 @@ export default function ChatLayout({
 }) {
   const [chats, setChats] = useState<ChatItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
@@ -48,25 +51,28 @@ export default function ChatLayout({
     ? pathname.split("/")[2]
     : null;
 
+  const fetchChats = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch("http://localhost:8000/chats");
+      const data: ChatItem[] = await response.json();
+
+      const formattedChats: ChatItem[] = data.map((chat: ChatItem) => ({
+        ...chat,
+        lastTime: formatTime(chat.lastTime),
+      }));
+
+      setChats(formattedChats);
+    } catch (error) {
+      console.error("获取聊天列表失败:", error);
+      setError("无法加载聊天列表，请检查网络连接");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchChats = async (): Promise<void> => {
-      try {
-        const response = await fetch("http://localhost:8000/chats");
-        const data: ChatItem[] = await response.json();
-
-        const formattedChats: ChatItem[] = data.map((chat: ChatItem) => ({
-          ...chat,
-          lastTime: formatTime(chat.lastTime),
-        }));
-
-        setChats(formattedChats);
-      } catch (error) {
-        console.error("获取聊天列表失败:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchChats();
   }, []);
 
@@ -100,6 +106,56 @@ export default function ChatLayout({
 
   const handleChatClick = (chatId: string) => {
     router.push(`/chat/${chatId}`);
+  };
+
+  const renderChatList = () => {
+    if (loading) {
+      return <ChatListSkeleton />;
+    }
+
+    if (error) {
+      return <ChatError onRetry={fetchChats} message={error} />;
+    }
+
+    return (
+      <div className="flex-1 overflow-y-auto">
+        {chats.map((chat) => (
+          <div
+            key={chat.id}
+            className={`flex items-center p-4 hover:bg-accent cursor-pointer border-b border-border ${
+              currentChatId === chat.id ? "bg-accent" : ""
+            }`}
+            onClick={() => handleChatClick(chat.id)}
+          >
+            <div className="relative flex-shrink-0">
+              <Avatar className="w-12 h-12">
+                <AvatarImage src={chat.avatar} alt={chat.name} />
+                <AvatarFallback>{chat.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              {chat.unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+                </div>
+              )}
+            </div>
+
+            <div className="ml-3 flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-foreground truncate">
+                  {chat.name}
+                </h3>
+                <span className="text-xs text-muted-foreground">
+                  {chat.lastTime}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground truncate mt-1">
+                {chat.lastMessage}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -166,49 +222,7 @@ export default function ChatLayout({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="text-muted-foreground">加载中...</div>
-            </div>
-          ) : (
-            chats.map((chat) => (
-              <div
-                key={chat.id}
-                className={`flex items-center p-4 hover:bg-accent cursor-pointer border-b border-border ${
-                  currentChatId === chat.id ? "bg-accent" : ""
-                }`}
-                onClick={() => handleChatClick(chat.id)}
-              >
-                <div className="relative flex-shrink-0">
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage src={chat.avatar} alt={chat.name} />
-                    <AvatarFallback>{chat.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  {chat.unreadCount > 0 && (
-                    <div className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-                    </div>
-                  )}
-                </div>
-
-                <div className="ml-3 flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-foreground truncate">
-                      {chat.name}
-                    </h3>
-                    <span className="text-xs text-muted-foreground">
-                      {chat.lastTime}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground truncate mt-1">
-                    {chat.lastMessage}
-                  </p>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        {renderChatList()}
       </div>
 
       <div className="flex-1 flex flex-col">{children}</div>
