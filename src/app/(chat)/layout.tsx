@@ -21,6 +21,7 @@ import {
   Users,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface ChatItem {
@@ -40,6 +41,12 @@ export default function ChatLayout({
   const [chats, setChats] = useState<ChatItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { setTheme } = useTheme();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const currentChatId = pathname.startsWith("/chat/")
+    ? pathname.split("/")[2]
+    : null;
 
   useEffect(() => {
     const fetchChats = async (): Promise<void> => {
@@ -89,6 +96,10 @@ export default function ChatLayout({
         day: "2-digit",
       });
     }
+  };
+
+  const handleChatClick = (chatId: string) => {
+    router.push(`/chat/${chatId}`);
   };
 
   return (
@@ -164,7 +175,10 @@ export default function ChatLayout({
             chats.map((chat) => (
               <div
                 key={chat.id}
-                className="flex items-center p-4 hover:bg-accent cursor-pointer border-b border-border"
+                className={`flex items-center p-4 hover:bg-accent cursor-pointer border-b border-border ${
+                  currentChatId === chat.id ? "bg-accent" : ""
+                }`}
+                onClick={() => handleChatClick(chat.id)}
               >
                 <div className="relative flex-shrink-0">
                   <Avatar className="w-12 h-12">
